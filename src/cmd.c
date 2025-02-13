@@ -25,7 +25,25 @@ int internal(char **cmd) {
             return cd(cmd[1]);
         }
         return 1;
+    } else if (strcmp(cmd[0], "sleep") == 0) {
+        if (cmd[1] == NULL) {
+            fprintf(stderr, "sleep: expected argument\n");
+        } else {
+            sleep(atoi(cmd[1]));
+        }
+        return 1;
+    } else if (strcmp(cmd[0], "kill") == 0) {
+        if (cmd[1] == NULL) {
+            fprintf(stderr, "kill: expected argument\n");
+        } else {
+            kill(atoi(cmd[1]), SIGKILL);
+        }
+        return 1;
+    } else
+    {
+        /* code */
     }
+    
     return 0;
 }
 
