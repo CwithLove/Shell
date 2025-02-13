@@ -2,11 +2,11 @@
  * Copyright (C) 2002, Simon Nieuviarts
  */
 
-#include <stdio.h>
-#include <stdlib.h>
 #include "readcmd.h"
 #include "csapp.h"
-
+#include "cmd.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 int main()
 {
