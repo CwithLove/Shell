@@ -3,31 +3,40 @@
 #include <stdlib.h>
 #include <string.h>
 
-static int nb_commande(struct cmdline l) {
-    if (l->)
+static int nb_commande(struct cmdline *l) {
+    return 1;
 }
 
-int cd() {
-
-}
-
-int internal(char **cmd) {
-    if (strcmp(cmd[0], "exit") == 0) {
-        exit(0);
-    } else if (strcmp(cmd[0], "cd")) {
-        //faire
+int cd(char *path) {
+    if (chdir(path) != 0) {
+        perror("cd");
         return 1;
     }
     return 0;
 }
 
-int execution(struct cmd l) {
-    int nb_cmd = nb_commande();
+int internal(char **cmd) {
+    if (strcmp(cmd[0], "exit") == 0 || strcmp(cmd[0], "quit") == 0) {
+        exit(0);
+    } else if (strcmp(cmd[0], "cd") == 0) {
+        if (cmd[1] == NULL) {
+            fprintf(stderr, "cd: expected argument\n");
+        } else {
+            return cd(cmd[1]);
+        }
+        return 1;
+    }
+    return 0;
+}
+
+int execution(struct cmdline *l) {
+    int nb_cmd = nb_commande(l);
     for (int i = 0; i < nb_cmd; i++) {
         if (internal(l->seq[i])) {
             //
         } else {
-            Execve();
+            
+
         }
     }
 

@@ -42,7 +42,7 @@ int main()
 			printf("\n");
 		}
 
-		fprintf(stderr, "Execution cmd...")
+		fprintf(stderr, "Execution cmd...\n");
 		execution(l);
 	}
 }
