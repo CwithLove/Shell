@@ -40,13 +40,22 @@ void execution(struct cmdline *l) {
 
             if (pid == 0) {
                 // Fils
-                // char *envp = getenv("PATH");
+                // dup2()
+                if (l->in != NULL) {
+                    int in = open(l->in, O_RDONLY);
+                    dup2(in, STDIN_FILENO);
+                }
+
+                if (l->out != NULL) {
+                    int out = open(l->out, O_CREAT | O_WRONLY, 0644);
+                    dup2(out, STDOUT_FILENO);
+                }
 
                 execvp(l->seq[0][0], l->seq[0]);
                 exit(0);
             } else if (pid > 0) {
                 pid = waitpid(pid, NULL, 0);
-            } else { // Case -1
+            } else {
                 perror("Fork");
             }
         }
