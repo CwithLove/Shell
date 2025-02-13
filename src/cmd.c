@@ -33,30 +33,56 @@ int internal(char **cmd) {
     return 0;
 }
 
-static int **create_pipes(int n_cmd) {
-    int **pipes = (int **)malloc(sizeof(int *) * n_cmd - 1);
-    if (pipes == NULL) {
-        perror("malloc");
-        exit(EXIT_FAILURE);
-    }
-    pipes[0] = (int *)malloc(sizeof(int) * 2);
-    if (pipes[0] == NULL) {
-        perror("malloc");
-        exit(EXIT_FAILURE);
-    }
-    if (pipe(pipes[0]) == -1) {
-        perror("pipe");
-        exit(EXIT_FAILURE);
-    }
-    return pipes;
-}
+// static int **create_pipes(int n_cmd) {
+//     int **pipes = (int **)malloc(sizeof(int *) * n_cmd - 1);
+//     if (pipes == NULL) {
+//         perror("malloc");
+//         exit(EXIT_FAILURE);
+//     }
+//     pipes[0] = (int *)malloc(sizeof(int) * 2);
+//     if (pipes[0] == NULL) {
+//         perror("malloc");
+//         exit(EXIT_FAILURE);
+//     }
+//     if (pipe(pipes[0]) == -1) {
+//         perror("pipe");
+//         exit(EXIT_FAILURE);
+//     }
+//     return pipes;
+// }
 
-static void connect_pipes(int **pipes) {
+// static void connect_pipes(int **pipes) {
 
-}
+// }
 
 static void redirection_in_out(struct cmdline *l) {
-    
+    if (l->in != NULL) {
+        int fd = open(l->in, O_RDONLY);
+        
+        if (fd == -1) {
+            perror("open");
+            exit(EXIT_FAILURE);
+        }
+        
+        if (dup2(fd, STDIN_FILENO) == -1) {
+            perror("dup2");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    if (l->out != NULL) {
+        int fd = open(l->out, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+        
+        if (fd == -1) {
+            perror("open");
+            exit(EXIT_FAILURE);
+        }
+
+        if (dup2(fd, STDOUT_FILENO) == -1) {
+            perror("dup2");
+            exit(EXIT_FAILURE);
+        }
+    }
 }
 
 void execution(struct cmdline *l) {
@@ -65,10 +91,10 @@ void execution(struct cmdline *l) {
     }
 
     int n_cmd = nb_cmd(l);
-    int **pipes;
+    // int **pipes;
 
     if (n_cmd > 1) {
-        pipes = create_pipes(n_cmd);
+        // pipes = create_pipes(n_cmd);
     }
 
     for (int i = 0; i < n_cmd; i++) {
@@ -80,13 +106,19 @@ void execution(struct cmdline *l) {
 
             if (pid == 0) {
                 // Fils
+
                 // dup2()
+                redirection_in_out(l);
                 if (execvp(l->seq[i][0], l->seq[0]) == -1) {
                     fprintf(stderr, "%s : Command not found\n", l->seq[i][0]);
                     exit(3);
                 }
             } else if (pid > 0) {
+                // Pere
                 pid = waitpid(pid, NULL, 0);
+                if (pid == -1) {
+                    perror("Waitpid");
+                }
             } else {
                 perror("Fork");
             }
