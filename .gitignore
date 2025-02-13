@@ -1,6 +1,9 @@
 # Prerequisites
 *.d
 
+# Execute
+shell
+
 # Object files
 *.o
 *.ko

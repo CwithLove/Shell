@@ -47,16 +47,27 @@ int internal(char **cmd) {
     return 0;
 }
 
-int execution(struct cmdline *l) {
+void execution(struct cmdline *l) {
     int nb_cmd = nb_commande(l);
     for (int i = 0; i < nb_cmd; i++) {
         if (internal(l->seq[i])) {
             //
         } else {
-            
+            pid_t pid;
+            pid = Fork();
 
+            if (pid == 0) {
+                // Fils
+                // char *envp = getenv("PATH");
+
+                execvp(l->seq[0][0], l->seq[0]);
+                exit(0);
+            } else if (pid > 0) {
+                pid = waitpid(pid, NULL, 0);
+            } else { // Case -1
+                perror("Fork");
+            }
         }
     }
-
 }
 
