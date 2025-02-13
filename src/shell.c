@@ -41,5 +41,8 @@ int main()
 			}
 			printf("\n");
 		}
+
+		fprintf(stderr, "Execution cmd...")
+		execution(l);
 	}
 }
