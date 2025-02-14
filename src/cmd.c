@@ -114,10 +114,52 @@ void connect_pipes(int **pipes, int rank_cmd, int n_cmd) {
     // ---
     // sinon
     // Fermer les tubes 
+    if (rank_cmd == -1) {
+        for (int i = 0; i < n_cmd - 1; i++) {
+            close(pipes[i][0]);
+            close(pipes[i][1]);
+        }
+    } else {
+        for (int i = 0; i < n_cmd - 1; i++) {
+            if (i == rank_cmd) {
+                close(pipes[i][1]);
+                dup2(pipes[i][0], STDIN_FILENO);
+            if (i == rank_cmd - 1) {
+                close(pipes[i][0]);
+                dup2(pipes[i][1], STDOUT_FILENO);
+            } else {
+                close(pipes[i][0]);
+                close(pipes[i][1]);
+            }
+        }
+    }
+    
 }
-
-void connect_in_out(struct cmdline* l, int rank_cmd, int n_cmd) {
-    // dup2(l->in, STDIN_FILENO) in -> Fils tube Fils2 tube2 Fils -> out dup2(l->out, STDOUT_FILENO)    
+}
+void connect_in_out(struct cmdline* l, int rank_cmd, int n_cmd) 
+{
+    // dup2(l->in, STDIN_FILENO) in -> Fils tube Fils2 tube2 Fils -> out dup2(l->out, STDOUT_FILENO)  
+    if (rank_cmd == 0) {
+        if (l->in != NULL) {
+            int fd = open(l->in, O_RDONLY);
+            if (fd == -1) {
+                perror("open");
+            }
+            if (dup2(fd, STDIN_FILENO) == -1) {
+                perror("dup2");
+            }
+        }
+    } else if (rank_cmd == n_cmd - 1) {
+        if (l->out != NULL) {
+            int fd = open(l->out, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+            if (fd == -1) {
+                perror("open");
+            }
+            if (dup2(fd, STDOUT_FILENO) == -1) {
+                perror("dup2");
+            }
+        }
+    }
 }
 
 void execution(struct cmdline *l) {
