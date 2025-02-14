@@ -13,8 +13,19 @@ int main()
 	while (1) {
 		struct cmdline *l;
 		// int i, j;
+		
+		/* Change username if you want */
+		char *username = "CwithLove@chuhandsome";
 
-		printf("shell> ");
+
+		char *home = getenv("HOME");
+		char cwd[MAXPATH]; 
+		getcwd(cwd, MAXPATH);
+		if (home != NULL && strstr(cwd, home) == cwd) {
+			fprintf(stdout, "\033[0;32m%s\033[0m:[\033[0;34m~%s\033[0m]> ", username, cwd + strlen(home));
+		} else {
+			fprintf(stdout, "\033[0;32m%s\033[0m:[\033[0;34m%s\033[0m]> ", username, cwd);
+		}
 		l = readcmd();
 
 		/* If input stream closed, normal termination */

@@ -11,28 +11,48 @@ static int nb_cmd(struct cmdline *l) {
     return i;
 }
 
-int cd(char *path) {
+static int cd(char **cmd) {
+    char *path = malloc(sizeof(char) * MAXPATH + 1);
+    if (path == NULL) {
+        perror("malloc");
+    }
+
+    if (cmd[1] == NULL) {
+        char *tem = getenv("HOME");
+        if (tem != NULL) {
+            strncpy(path, tem, MAXPATH);
+        }
+
+    } else if (cmd[1][0] == '~') {
+        if (cmd[1][1] == '/' || cmd[1][1] == '\0') {
+            char *tem = getenv("HOME");
+            if (tem != NULL) {
+                snprintf(path, MAXPATH, "%s%s", tem, cmd[1] + 1);
+            }
+        } else {
+            perror("cd");
+        }
+    } else {
+        strncpy(path, cmd[1], MAXPATH);
+    }
+    
     if (chdir(path) != 0) {
         perror("cd");
         return 1;
     }
-    // path = getenv("PWD");
-    // path = "/home/n/nguyenc/L3_2025/SR/L3_SR/Shell/headers";
-    // printf("%s\n", path);
-    // setenv(path);
-    return 0;
+
+    char cwd[MAXPATH];
+    getcwd(cwd, MAXPATH);
+    setenv("PWD", cwd, 1);
+    free(path);
+    return 1;
 }
 
 int internal(char **cmd) {
     if (strcmp(cmd[0], "exit") == 0 || strcmp(cmd[0], "quit") == 0) {
         exit(0);
-    } else if (strcmp(cmd[0], "cd") == 0) {
-        if (cmd[1] == NULL) {
-            fprintf(stderr, "cd: expected argument\n");
-        } else {
-            return cd(cmd[1]);
-        }
-        return 1;
+    } else if (strcmp(cmd[0], "cd") == 0) { 
+        return cd(cmd);
     } else if (strcmp(cmd[0], "sleep") == 0) {
         if (cmd[1] == NULL) {
             fprintf(stderr, "sleep: expected argument\n");
@@ -103,6 +123,15 @@ int **create_pipes(int n_cmd) {
  * 
  * Si rank_cmd = 0 
  */
+
+void free_pipes(int **pipes, int n_cmd) {
+    for (int i = 0; i < n_cmd - 1; i++)
+    {
+        free(pipes[i]);
+    }
+    free(pipes);
+}
+
 void connect_pipes(int **pipes, int rank_cmd, int n_cmd) {
     // si rank_cmd = -1
     // Fermer les tubes
@@ -173,7 +202,7 @@ void execution(struct cmdline *l) {
     }
 
     int n_cmd = nb_cmd(l);
-    int **pipes;
+    // int **pipes;
 
 
     if (n_cmd > 1) {
@@ -198,14 +227,16 @@ void execution(struct cmdline *l) {
                 }
             } else if (pid > 0) {
                 // Pere
-                connect_pipes(pipes, -1, n_cmd);
-                pid = waitpid(pid, NULL, 0);
-                if (pid == -1) {
-                    perror("Waitpid");
-                }
+                // pid = waitpid(pid, NULL, 0);
+                // if (pid == -1) {
+                //     perror("Waitpid");
+                // }
             } else {
                 perror("Fork");
             }
+
+            // connection_pipes(pipes, -1, n_cmd);
+            // free_pipes(pipes, n_cmd);
         }
     }
 }
