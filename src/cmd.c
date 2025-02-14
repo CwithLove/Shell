@@ -16,6 +16,10 @@ int cd(char *path) {
         perror("cd");
         return 1;
     }
+    // path = getenv("PWD");
+    // path = "/home/n/nguyenc/L3_2025/SR/L3_SR/Shell/headers";
+    // printf("%s\n", path);
+    // setenv(path);
     return 0;
 }
 
@@ -43,8 +47,9 @@ int internal(char **cmd) {
             kill(atoi(cmd[1]), SIGKILL);
         }
         return 1;
-    } else
-    {
+    } else if (strcmp(cmd[0], "fg") == 0) {
+        /* code */
+    } else if (strcmp(cmd[0], "bg") == 0) {
         /* code */
     }
     
@@ -77,13 +82,35 @@ static void redirection_in_out(struct cmdline *l) {
     }
 }
 
+int **create_pipes(int n_cmd) {
+
+}
+
+/**
+ * @brief Connects the pipes between the commands
+ * 
+ * @param pipes 
+ * @param n_cmd 
+ * @param rank_cmd 
+ * 
+ * Si rank_cmd = 0 
+ */
+void connect_pipes(int **pipes, int n_cmd, int rank_cmd) {
+
+}
+
+void connect_in_out(struct cmdline* l, int n_cmd) {
+
+}
+
 void execution(struct cmdline *l) {
     if (l->seq[0] == NULL) {
         return;
     }
 
     int n_cmd = nb_cmd(l);
-    // int **pipes;
+    int **pipes;
+
 
     if (n_cmd > 1) {
         // pipes = create_pipes(n_cmd);
@@ -98,7 +125,10 @@ void execution(struct cmdline *l) {
 
             if (pid == 0) {
                 // Fils
-                redirection_in_out(l);
+
+                // connect_pipes(pipes, n_cmd, i);
+                // redirection_in_out(l);
+                // connect_in_out(l, n_cmd);
                 if (execvp(l->seq[i][0], l->seq[0]) == -1) {
                     fprintf(stderr, "%s : Command not found\n", l->seq[i][0]);
                     exit(3);
