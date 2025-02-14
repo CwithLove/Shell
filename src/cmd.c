@@ -131,7 +131,7 @@ void free_pipes(int **pipes, int n_cmd) {
     }
     free(pipes);
 }
-
+//bug dans pipe
 void connect_pipes(int **pipes, int rank_cmd, int n_cmd) {
     // si rank_cmd = -1
     // Fermer les tubes
@@ -149,14 +149,14 @@ void connect_pipes(int **pipes, int rank_cmd, int n_cmd) {
         if (i == rank_cmd) {
             close(pipes[i][0]);
             if (dup2(pipes[i][1], STDOUT_FILENO)) {
-                perror("dup2");
+                perror("dup2 in pipe");
                 exit(2);
             }
         }
         else if (i == rank_cmd - 1) {
             close(pipes[i][1]);
             if (dup2(pipes[i][0], STDIN_FILENO) == -1) {
-                perror("dup2");
+                perror("dup2 out pipe");
                 exit(2);
             }
             
@@ -179,7 +179,7 @@ void connect_in_out(struct cmdline* l, int rank_cmd, int n_cmd)
                 perror(l->in);
             }
             if (dup2(fd, STDIN_FILENO) == -1) {
-                perror("dup2 pipe in");
+                perror("dup2 in");
 
             }
         }
@@ -190,7 +190,7 @@ void connect_in_out(struct cmdline* l, int rank_cmd, int n_cmd)
                 perror(l->out);
             }
             if (dup2(fd, STDOUT_FILENO) == -1) {
-                perror("dup2 pipe out");
+                perror("dup2 out");
             }
         }
     }
@@ -202,7 +202,7 @@ void execution(struct cmdline *l) {
     }
 
     int n_cmd = nb_cmd(l);
-    // int **pipes;
+    int **pipes;
 
 
     if (n_cmd > 1) {
@@ -221,6 +221,7 @@ void execution(struct cmdline *l) {
 
                 connect_in_out(l,i,n_cmd);
                 connect_pipes(pipes, i,n_cmd);
+                free_pipes(pipes, n_cmd);
                 if (execvp(l->seq[i][0], l->seq[0]) == -1) {
                     fprintf(stderr, "%s : Command not found\n", l->seq[i][0]);
                     exit(3);
@@ -235,9 +236,11 @@ void execution(struct cmdline *l) {
                 perror("Fork");
             }
 
-            // connection_pipes(pipes, -1, n_cmd);
-            // free_pipes(pipes, n_cmd);
+            
         }
+        
     }
+    connect_pipes(pipes, -1, n_cmd);
+    free_pipes(pipes, n_cmd);
 }
 

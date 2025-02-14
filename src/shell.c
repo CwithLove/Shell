@@ -22,9 +22,9 @@ int main()
 		char cwd[MAXPATH]; 
 		getcwd(cwd, MAXPATH);
 		if (home != NULL && strstr(cwd, home) == cwd) {
-			fprintf(stdout, "\033[0;32m%s\033[0m:[\033[0;34m~%s\033[0m]> ", username, cwd + strlen(home));
+			printf("\033[0;32m%s\033[0m:[\033[0;34m~%s\033[0m]> ", username, cwd + strlen(home));
 		} else {
-			fprintf(stdout, "\033[0;32m%s\033[0m:[\033[0;34m%s\033[0m]> ", username, cwd);
+			printf( "\033[0;32m%s\033[0m:[\033[0;34m%s\033[0m]> ", username, cwd);
 		}
 		l = readcmd();
 
