@@ -116,26 +116,27 @@ void connect_pipes(int **pipes, int rank_cmd, int n_cmd) {
     // sinon
     // Fermer les tubes 
 
-        for (int i = 0; i < n_cmd - 1; i++) {
-            if (i == rank_cmd) {
-                close(pipes[i][0]);
-                if (dup2(pipes[i][1], STDOUT_FILENO)) {
-                    perror("dup2");
-                    exit(2);
-                }
-            if (i == rank_cmd - 1) {
-                close(pipes[i][1]);
-                if (dup2(pipes[i][0], STDIN_FILENO) == -1) {
-                    perror("dup2");
-                    exit(2);
-                }
-                
-            } else {
-                close(pipes[i][0]);
-                close(pipes[i][1]);
+    for (int i = 0; i < n_cmd - 1; i++) {
+        if (i == rank_cmd) {
+            close(pipes[i][0]);
+            if (dup2(pipes[i][1], STDOUT_FILENO)) {
+                perror("dup2");
+                exit(2);
             }
         }
-    }
+        else if (i == rank_cmd - 1) {
+            close(pipes[i][1]);
+            if (dup2(pipes[i][0], STDIN_FILENO) == -1) {
+                perror("dup2");
+                exit(2);
+            }
+            
+        } else {
+            close(pipes[i][0]);
+            close(pipes[i][1]);
+        }
+        
+    } 
     
 }
 
@@ -149,7 +150,8 @@ void connect_in_out(struct cmdline* l, int rank_cmd, int n_cmd)
                 perror(l->in);
             }
             if (dup2(fd, STDIN_FILENO) == -1) {
-                perror("dup2");
+                perror("dup2 pipe in");
+
             }
         }
     } if (rank_cmd == n_cmd - 1) {
@@ -159,7 +161,7 @@ void connect_in_out(struct cmdline* l, int rank_cmd, int n_cmd)
                 perror(l->out);
             }
             if (dup2(fd, STDOUT_FILENO) == -1) {
-                perror("dup2");
+                perror("dup2 pipe out");
             }
         }
     }
