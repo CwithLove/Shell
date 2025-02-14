@@ -4,6 +4,8 @@
 #include "csapp.h"
 #include "readcmd.h"
 
+#define MAXPATH 100
+
 void execution(struct cmdline *l);
 
 #endif
