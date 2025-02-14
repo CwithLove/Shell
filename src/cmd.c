@@ -56,34 +56,41 @@ int internal(char **cmd) {
     return 0;
 }
 
-static void redirection_in_out(struct cmdline *l) {
-    if (l->in != NULL) {
-        int fd = open(l->in, O_RDONLY);
+// static void redirection_in_out(struct cmdline *l) {
+//     if (l->in != NULL) {
+//         int fd = open(l->in, O_RDONLY);
         
-        if (fd == -1) {
-            perror("open");
-        }
+//         if (fd == -1) {
+//             perror("open");
+//         }
         
-        if (dup2(fd, STDIN_FILENO) == -1) {
-            perror("dup2");
-        }
-    }
+//         if (dup2(fd, STDIN_FILENO) == -1) {
+//             perror("dup2");
+//         }
+//     }
 
-    if (l->out != NULL) {
-        int fd = open(l->out, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+//     if (l->out != NULL) {
+//         int fd = open(l->out, O_WRONLY | O_CREAT | O_TRUNC, 0644);
         
-        if (fd == -1) {
-            perror("open");
-        }
+//         if (fd == -1) {
+//             perror("open");
+//         }
 
-        if (dup2(fd, STDOUT_FILENO) == -1) {
-            perror("dup2");
-        }
-    }
-}
+//         if (dup2(fd, STDOUT_FILENO) == -1) {
+//             perror("dup2");
+//         }
+//     }
+// }
 
 int **create_pipes(int n_cmd) {
-
+    int **pipes = malloc(sizeof(int *) * (n_cmd - 1));
+    for (int i = 0; i < n_cmd - 1; i++) {
+        pipes[i] = malloc(sizeof(int) * 2);
+        if (pipe(pipes[i]) == -1) {
+            perror("pipe");
+            exit(2);
+        }
+    }
 }
 
 /**
@@ -95,12 +102,22 @@ int **create_pipes(int n_cmd) {
  * 
  * Si rank_cmd = 0 
  */
-void connect_pipes(int **pipes, int n_cmd, int rank_cmd) {
+void connect_pipes(int **pipes, int rank_cmd, int n_cmd) {
+    // si rank_cmd = -1
+    // Fermer les tubes
+    // Fils dup2(tube[0],STDOUT)Tube0(close)  (close)tube1(close) (close)tube2(close)
+    // (close)tube[]dup2(tube[1],SDTIN) -> Fils2 ->  ()tube1(close)
 
+    // Boucle i = 0 à n_cmd - 1:
+    // Si i = rank_cmd
+    // close()
+    // ---
+    // sinon
+    // Fermer les tubes 
 }
 
-void connect_in_out(struct cmdline* l, int n_cmd) {
-
+void connect_in_out(struct cmdline* l, int rank_cmd, int n_cmd) {
+    // dup2(l->in, STDIN_FILENO) in -> Fils tube Fils2 tube2 Fils -> out dup2(l->out, STDOUT_FILENO)    
 }
 
 void execution(struct cmdline *l) {
@@ -113,7 +130,7 @@ void execution(struct cmdline *l) {
 
 
     if (n_cmd > 1) {
-        // pipes = create_pipes(n_cmd);
+        // pipes = create_pipes(n_cmd); n_cmd - 1 
     }
 
     for (int i = 0; i < n_cmd; i++) {
@@ -126,9 +143,8 @@ void execution(struct cmdline *l) {
             if (pid == 0) {
                 // Fils
 
-                // connect_pipes(pipes, n_cmd, i);
-                // redirection_in_out(l);
                 // connect_in_out(l, n_cmd);
+                // connect_pipes(pipes, n_cmd, i);
                 if (execvp(l->seq[i][0], l->seq[0]) == -1) {
                     fprintf(stderr, "%s : Command not found\n", l->seq[i][0]);
                     exit(3);
