@@ -33,40 +33,16 @@ int internal(char **cmd) {
     return 0;
 }
 
-// static int **create_pipes(int n_cmd) {
-//     int **pipes = (int **)malloc(sizeof(int *) * n_cmd - 1);
-//     if (pipes == NULL) {
-//         perror("malloc");
-//         exit(EXIT_FAILURE);
-//     }
-//     pipes[0] = (int *)malloc(sizeof(int) * 2);
-//     if (pipes[0] == NULL) {
-//         perror("malloc");
-//         exit(EXIT_FAILURE);
-//     }
-//     if (pipe(pipes[0]) == -1) {
-//         perror("pipe");
-//         exit(EXIT_FAILURE);
-//     }
-//     return pipes;
-// }
-
-// static void connect_pipes(int **pipes) {
-
-// }
-
 static void redirection_in_out(struct cmdline *l) {
     if (l->in != NULL) {
         int fd = open(l->in, O_RDONLY);
         
         if (fd == -1) {
             perror("open");
-            exit(EXIT_FAILURE);
         }
         
         if (dup2(fd, STDIN_FILENO) == -1) {
             perror("dup2");
-            exit(EXIT_FAILURE);
         }
     }
 
@@ -75,12 +51,10 @@ static void redirection_in_out(struct cmdline *l) {
         
         if (fd == -1) {
             perror("open");
-            exit(EXIT_FAILURE);
         }
 
         if (dup2(fd, STDOUT_FILENO) == -1) {
             perror("dup2");
-            exit(EXIT_FAILURE);
         }
     }
 }
@@ -102,12 +76,10 @@ void execution(struct cmdline *l) {
             //
         } else {
             pid_t pid;
-            pid = Fork();
+            pid = fork();
 
             if (pid == 0) {
                 // Fils
-
-                // dup2()
                 redirection_in_out(l);
                 if (execvp(l->seq[i][0], l->seq[0]) == -1) {
                     fprintf(stderr, "%s : Command not found\n", l->seq[i][0]);
