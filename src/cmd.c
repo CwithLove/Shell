@@ -49,80 +49,79 @@ static int cd(char **cmd) {
 }
 
 int internal(char **cmd) {
-    if (strcmp(cmd[0], "exit") == 0 || strcmp(cmd[0], "quit") == 0) {
+    if (!strcmp(cmd[0], "exit") || !strcmp(cmd[0], "quit")) {
         exit(0);
-    } else if (strcmp(cmd[0], "cd") == 0) { 
+    } else if (!strcmp(cmd[0], "cd")) { 
         return cd(cmd);
-    } else if (strcmp(cmd[0], "sleep") == 0) {
+    } else if (!strcmp(cmd[0], "sleep")) {
         if (cmd[1] == NULL) {
             fprintf(stderr, "sleep: expected argument\n");
         } else {
             sleep(atoi(cmd[1]));
         }
         return 1;
-    } else if (strcmp(cmd[0], "kill") == 0) {
+    } else if (!strcmp(cmd[0], "kill")) {
         if (cmd[1] == NULL) {
             fprintf(stderr, "kill: expected argument\n");
         } else {
             kill(atoi(cmd[1]), SIGKILL);
         }
         return 1;
-    } else if (strcmp(cmd[0], "fg") == 0) {
+    } else if (!strcmp(cmd[0], "fg")) {
         /* code */
-    } else if (strcmp(cmd[0], "bg") == 0) {
+    } else if (!strcmp(cmd[0], "bg")) {
         /* code */
     }
     
     return 0;
 }
 
-// static void redirection_in_out(struct cmdline *l) {
-//     if (l->in != NULL) {
-//         int fd = open(l->in, O_RDONLY);
-        
-//         if (fd == -1) {
-//             perror("open");
-//         }
-        
-//         if (dup2(fd, STDIN_FILENO) == -1) {
-//             perror("dup2");
-//         }
-//     }
-
-//     if (l->out != NULL) {
-//         int fd = open(l->out, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-        
-//         if (fd == -1) {
-//             perror("open");
-//         }
-
-//         if (dup2(fd, STDOUT_FILENO) == -1) {
-//             perror("dup2");
-//         }
-//     }
-// }
-
 int **create_pipes(int n_cmd) {
-    int **pipes = malloc(sizeof(int *) * (n_cmd - 1));
+    int **pipes = (int **)malloc(sizeof(int *) * (n_cmd - 1));
+    if (pipes == NULL) {
+        perror("malloc");
+        exit(EXIT_FAILURE);
+    }
+
     for (int i = 0; i < n_cmd - 1; i++) {
-        pipes[i] = malloc(sizeof(int) * 2);
+        pipes[i] = (int *)malloc(sizeof(int) * 2);
+        if (pipes[i] == NULL) {
+            perror("malloc");
+            exit(EXIT_FAILURE);
+        }
+
         if (pipe(pipes[i]) == -1) {
             perror("pipe");
-            exit(2);
+            exit(EXIT_FAILURE);
         }
     }
     return pipes;
 }
 
-/**
- * @brief Connects the pipes between the commands
- * 
- * @param pipes 
- * @param n_cmd 
- * @param rank_cmd 
- * 
- * Si rank_cmd = 0 
- */
+void connect_pipes(int **pipes, int rang_cmd, int n_cmd) {
+    for (int i = 0; i < n_cmd - 1; i++) {
+        if (i == rang_cmd) {
+            close(pipes[i][0]);
+            if (dup2(pipes[i][1], STDOUT_FILENO) == -1) {
+                perror("dup2 in connect");
+                exit(EXIT_FAILURE);
+            }
+            close(pipes[i][1]);
+        }
+
+        else if (i == rang_cmd - 1) {
+            close(pipes[i][1]);
+            if (dup2(pipes[i][0], STDIN_FILENO) == -1) {
+                perror("dup2 out pipe");
+                exit(EXIT_FAILURE);
+            }
+            close(pipes[i][0]);
+        } else {
+            close(pipes[i][0]);
+            close(pipes[i][1]);
+        }  
+    } 
+}
 
 void free_pipes(int **pipes, int n_cmd) {
     for (int i = 0; i < n_cmd - 1; i++)
@@ -131,69 +130,33 @@ void free_pipes(int **pipes, int n_cmd) {
     }
     free(pipes);
 }
-//bug dans pipe
-void connect_pipes(int **pipes, int rank_cmd, int n_cmd) {
-    // si rank_cmd = -1
-    // Fermer les tubes
-    // Fils dup2(tube[0],STDOUT)Tube0(close) Fils1 (close)tube1(close) (close)tube2(close)
-    // (close)tube[]dup2(tube[1],SDTIN) -> Fils2 ->  ()tube1(close)
 
-    // Boucle i = 0 à n_cmd - 1:
-    // Si i = rank_cmd
-    // close()
-    // ---
-    // sinon
-    // Fermer les tubes 
-
-    for (int i = 0; i < n_cmd - 1; i++) {
-        if (i == rank_cmd) {
-            close(pipes[i][0]);
-            if (dup2(pipes[i][1], STDOUT_FILENO)) {
-                perror("dup2 in pipe");
-                exit(2);
-            }
-        }
-        else if (i == rank_cmd - 1) {
-            close(pipes[i][1]);
-            if (dup2(pipes[i][0], STDIN_FILENO) == -1) {
-                perror("dup2 out pipe");
-                exit(2);
-            }
-            
-        } else {
-            close(pipes[i][0]);
-            close(pipes[i][1]);
-        }
-        
-    } 
-    
-}
-
-void connect_in_out(struct cmdline* l, int rank_cmd, int n_cmd) 
+void connect_in_out(struct cmdline* l, int rang_cmd, int n_cmd) 
 {
-    // dup2(l->in, STDIN_FILENO) in -> Fils tube Fils2 tube2 Fils -> out dup2(l->out, STDOUT_FILENO)  
-    if (rank_cmd == 0) {
-        if (l->in != NULL) {
-            int fd = open(l->in, O_RDONLY);
-            if (fd == -1) {
-                perror(l->in);
-            }
-            if (dup2(fd, STDIN_FILENO) == -1) {
-                perror("dup2 in");
-
-            }
+    int fd;  
+    if (rang_cmd == 0 && l->in != NULL) {
+        fd = open(l->in, O_RDONLY);
+        if (fd == -1) {
+            perror(l->in);
+            exit(EXIT_FAILURE);
         }
-    } if (rank_cmd == n_cmd - 1) {
-        if (l->out != NULL) {
-            int fd = open(l->out, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-            if (fd == -1) {
-                perror(l->out);
-            }
-            if (dup2(fd, STDOUT_FILENO) == -1) {
-                perror("dup2 out");
-            }
+
+        if (dup2(fd, STDIN_FILENO) == -1) {
+            perror("dup2 in");
+            exit(EXIT_FAILURE);
+        }
+    } if (rang_cmd == n_cmd - 1 && l->out != NULL) {
+        fd = open(l->out, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+        if (fd == -1) {
+            perror(l->out);
+        }
+
+        if (dup2(fd, STDOUT_FILENO) == -1) {
+            perror("dup2 out");
+            exit(EXIT_FAILURE);
         }
     }
+    close(fd);
 }
 
 void execution(struct cmdline *l) {
@@ -203,43 +166,49 @@ void execution(struct cmdline *l) {
 
     int n_cmd = nb_cmd(l);
     int **pipes;
+    pid_t pid;
 
-
-    if (n_cmd > 1) {
+    if (n_cmd > 0) {
         pipes = create_pipes(n_cmd);
     }
 
-    for (int i = 0; i < n_cmd; i++) {
-        if (internal(l->seq[i])) {
-            //
-        } else {
-            pid_t pid;
-            pid = fork();
-
-            if (pid == 0) {
-                // Fils
-
-                connect_in_out(l,i,n_cmd);
-                connect_pipes(pipes, i,n_cmd);
-                free_pipes(pipes, n_cmd);
-                if (execvp(l->seq[i][0], l->seq[0]) == -1) {
-                    fprintf(stderr, "%s : Command not found\n", l->seq[i][0]);
-                    exit(3);
-                }
-            } else if (pid > 0) {
-                // Pere
-                // pid = waitpid(pid, NULL, 0);
-                // if (pid == -1) {
-                //     perror("Waitpid");
-                // }
-            } else {
-                perror("Fork");
-            }
-
-            
-        }
-        
+    pid_t *child_pids = malloc(sizeof(pid_t) * n_cmd);
+    if (child_pids == NULL) {
+        perror("malloc");
+        exit(EXIT_FAILURE);
     }
+
+    for (int cmd = 0; cmd < n_cmd; cmd++) {
+        if (internal(l->seq[cmd])) {
+            continue;
+        } 
+    
+        pid = fork();
+        if (pid == -1) {
+            perror("Fork");
+        }
+
+        if (pid == 0) {
+            // Fils
+            connect_in_out(l,cmd,n_cmd);
+            connect_pipes(pipes, cmd,n_cmd);
+            free_pipes(pipes, n_cmd);
+            if (execvp(l->seq[cmd][0], l->seq[cmd]) == -1) {
+                fprintf(stderr, "%s : Command not found\n", l->seq[cmd][0]);
+                exit(3);
+            }
+        } else if (pid > 0) {
+            // Pere
+            child_pids[cmd] = pid;
+        }
+    }
+
+    for (int i = 0; i < n_cmd; i++) {
+        if (waitpid(child_pids[i], NULL, 0) == -1) {
+            perror("waitpid");
+        }
+    }
+
     connect_pipes(pipes, -1, n_cmd);
     free_pipes(pipes, n_cmd);
 }
