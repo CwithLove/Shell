@@ -145,6 +145,7 @@ void connect_in_out(struct cmdline* l, int rang_cmd, int n_cmd)
             perror("dup2 in");
             exit(EXIT_FAILURE);
         }
+        close(fd);
     } if (rang_cmd == n_cmd - 1 && l->out != NULL) {
         fd = open(l->out, O_WRONLY | O_CREAT | O_TRUNC, 0644);
         if (fd == -1) {
@@ -155,8 +156,8 @@ void connect_in_out(struct cmdline* l, int rang_cmd, int n_cmd)
             perror("dup2 out");
             exit(EXIT_FAILURE);
         }
+        close(fd);
     }
-    close(fd);
 }
 
 void execution(struct cmdline *l) {
@@ -166,6 +167,7 @@ void execution(struct cmdline *l) {
 
     int n_cmd = nb_cmd(l);
     int **pipes;
+    int nb_child = 0;
     pid_t pid;
 
     if (n_cmd > 0) {
@@ -199,17 +201,18 @@ void execution(struct cmdline *l) {
             }
         } else if (pid > 0) {
             // Pere
-            child_pids[cmd] = pid;
-        }
-    }
-
-    for (int i = 0; i < n_cmd; i++) {
-        if (waitpid(child_pids[i], NULL, 0) == -1) {
-            perror("waitpid");
+            child_pids[nb_child++] = pid;
         }
     }
 
     connect_pipes(pipes, -1, n_cmd);
     free_pipes(pipes, n_cmd);
+
+    for (int i = 0; i < nb_child; i++) {
+        if (waitpid(child_pids[i], NULL, 0) == -1) {
+            perror("waitpid");
+        }
+    }
+
 }
 

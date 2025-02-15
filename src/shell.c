@@ -12,7 +12,7 @@
 int main()
 {
 	while (1) {
-		setup_handlers();
+		// setup_handlers();
 		struct cmdline *l;
 
 		// int i, j;
