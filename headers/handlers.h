@@ -1,5 +1,11 @@
+#ifndef HANDLERS_H
+#define HANDLERS_H
+
 #include "csapp.h"
+#include "interface.h"
 
 void sigchild_handler(int sig);
 
-int setup_handlers();
+void sigint_sigtstp_handler(int sig);
+
+#endif

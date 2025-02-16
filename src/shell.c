@@ -8,27 +8,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "handlers.h"
+#include "interface.h"
+
+extern int refresh_prompt;
 
 int main()
 {
+	Signal(SIGCHLD, sigchild_handler);
+	Signal(SIGINT, sigint_sigtstp_handler);
+	Signal(SIGTSTP, sigint_sigtstp_handler);
 	while (1) {
-		// setup_handlers();
 		struct cmdline *l;
-
-		// int i, j;
 		
-		/* Change username if you want */
-		char *username = "Vania@Marangozova";
-
-
-		char *home = getenv("HOME");
-		char cwd[MAXPATH]; 
-		getcwd(cwd, MAXPATH);
-		if (home != NULL && strstr(cwd, home) == cwd) {
-			printf("\033[0;32m%s\033[0m:[\033[0;34m~%s\033[0m]: ", username, cwd + strlen(home));
-		} else {
-			printf( "\033[0;32m%s\033[0m:[\033[0;34m%s\033[0m]: ", username, cwd);
-		}
+		prompt();
+		fflush(stdout);
+		// int i, j;
+	
 		l = readcmd();
 
 		/* If input stream closed, normal termination */

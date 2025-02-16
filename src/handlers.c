@@ -5,6 +5,9 @@
 #include <signal.h>
 #include <sys/wait.h>
 
+gid_t gpid = -1;
+int refresh_prompt = 0;
+
 void sigchild_handler(int sig) {
     int status;
     pid_t pid;
@@ -17,9 +20,16 @@ void sigchild_handler(int sig) {
     }
 }
 
-int setup_handlers() {
-    Signal(SIGCHLD, sigchild_handler);
-    return 0;
+void sigint_sigtstp_handler(int sig) {
+    if (gpid != -1) {
+        kill(-gpid, sig);
+        gpid = -1;
+    } else {
+        write(STDOUT_FILENO, "\n", 1);
+        prompt();
+        fflush(stdout);
+    }
 }
+
 
 #endif

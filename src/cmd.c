@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+extern gid_t gpid;
+
 static int nb_cmd(struct cmdline *l) {
     int i = 0;
     while (l->seq[i] != NULL) {
@@ -169,6 +171,7 @@ void execution(struct cmdline *l) {
     int **pipes;
     int nb_child = 0;
     pid_t pid;
+    gpid = -1;
 
     if (n_cmd > 0) {
         pipes = create_pipes(n_cmd);
@@ -188,9 +191,15 @@ void execution(struct cmdline *l) {
         pid = fork();
         if (pid == -1) {
             perror("Fork");
-        }
-
-        if (pid == 0) {
+        } else if (pid > 0) {
+            // Pere
+            child_pids[nb_child++] = pid;
+            if (gpid == -1) {
+                gpid = pid;
+                
+            }
+            setpgid(pid, gpid);
+        } else {
             // Fils
             connect_in_out(l,cmd,n_cmd);
             connect_pipes(pipes, cmd,n_cmd);
@@ -199,9 +208,6 @@ void execution(struct cmdline *l) {
                 fprintf(stderr, "%s : Command not found\n", l->seq[cmd][0]);
                 exit(3);
             }
-        } else if (pid > 0) {
-            // Pere
-            child_pids[nb_child++] = pid;
         }
     }
 
