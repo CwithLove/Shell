@@ -33,7 +33,7 @@ struct cmdline {
 
 	/**
 	 * @brief Name of the file for output redirection, if not null.
-	 * z
+	 * 
 	 * If this field is not null, it specifies the file name for output 
 	 * redirection.
 	 */

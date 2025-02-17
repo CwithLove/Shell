@@ -6,12 +6,11 @@
 #include <sys/wait.h>
 
 gid_t gpid = -1;
-int refresh_prompt = 0;
 
 void sigchild_handler(int sig) {
     int status;
     pid_t pid;
-    while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
+    while ((pid = waitpid(-1, &status, WNOHANG | WUNTRACED)) > 0) {
         if (WIFEXITED(status)) {
             fprintf(stderr, "Process %d exited with status %d\n", pid, WEXITSTATUS(status));
         } else {
@@ -26,8 +25,6 @@ void sigint_sigtstp_handler(int sig) {
         gpid = -1;
     } else {
         write(STDOUT_FILENO, "\n", 1);
-        prompt();
-        fflush(stdout);
     }
 }
 

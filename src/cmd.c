@@ -55,22 +55,10 @@ int internal(char **cmd) {
         exit(0);
     } else if (!strcmp(cmd[0], "cd")) { 
         return cd(cmd);
-    } else if (!strcmp(cmd[0], "sleep")) {
-        if (cmd[1] == NULL) {
-            fprintf(stderr, "sleep: expected argument\n");
-        } else {
-            sleep(atoi(cmd[1]));
-        }
-        return 1;
-    } else if (!strcmp(cmd[0], "kill")) {
-        if (cmd[1] == NULL) {
-            fprintf(stderr, "kill: expected argument\n");
-        } else {
-            kill(atoi(cmd[1]), SIGKILL);
-        }
-        return 1;
+    } else if (!strcmp(cmd[0], "jobs")) {
+        /* code */
     } else if (!strcmp(cmd[0], "fg")) {
-        
+        /* code */
     } else if (!strcmp(cmd[0], "bg")) {
         /* code */
     }
@@ -162,6 +150,16 @@ void connect_in_out(struct cmdline* l, int rang_cmd, int n_cmd)
     }
 }
 
+void wait_fg_process(struct cmdline *l, int nb_child, pid_t *child_pids) {
+    if (!l->bg) {
+        for (int i = 0; i < nb_child; i++) {
+            if (waitpid(child_pids[i], NULL, 0) == -1) {
+                perror("waitpid");
+            }
+        }
+    }
+}
+
 void execution(struct cmdline *l) {
     if (l->seq[0] == NULL) {
         return;
@@ -205,6 +203,9 @@ void execution(struct cmdline *l) {
             connect_pipes(pipes, cmd,n_cmd);
             free_pipes(pipes, n_cmd);
             if (execvp(l->seq[cmd][0], l->seq[cmd]) == -1) {
+                if (l->bg) {
+                    l->bg = 0;
+                }
                 fprintf(stderr, "%s : Command not found\n", l->seq[cmd][0]);
                 exit(3);
             }
@@ -213,12 +214,6 @@ void execution(struct cmdline *l) {
 
     connect_pipes(pipes, -1, n_cmd);
     free_pipes(pipes, n_cmd);
-
-    for (int i = 0; i < nb_child; i++) {
-        if (waitpid(child_pids[i], NULL, 0) == -1) {
-            perror("waitpid");
-        }
-    }
-
+    wait_fg_process(l, nb_child, child_pids);
 }
 
