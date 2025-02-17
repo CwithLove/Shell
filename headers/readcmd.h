@@ -48,6 +48,14 @@ struct cmdline {
 	 * Read the comment at the end of the file for more details.
 	 */
 	char ***seq;
+
+	/**
+	 * @brief Background indicator.
+	 * 
+	 * If this field is not 0, it indicates that the command line should be executed
+	 * in the background.
+	 */
+	int bg;
 };
 /**
  * @brief Description of the `seq` field of the `struct cmdline` structure. 

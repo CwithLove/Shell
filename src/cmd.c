@@ -70,7 +70,7 @@ int internal(char **cmd) {
         }
         return 1;
     } else if (!strcmp(cmd[0], "fg")) {
-        /* code */
+        
     } else if (!strcmp(cmd[0], "bg")) {
         /* code */
     }
