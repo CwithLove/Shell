@@ -1,5 +1,7 @@
 {
     "files.associations": {
-        "stdio.h": "c"
+        "*.c": "c",
+        "stdio.h": "c",
+        "readcmd.h": "c"
     }
 }

@@ -4,8 +4,7 @@
 #include "csapp.h"
 #include <signal.h>
 #include <sys/wait.h>
-
-gid_t gpid = -1;
+#include "jobs.h"
 
 void sigchild_handler(int sig) {
     int status;
@@ -20,12 +19,18 @@ void sigchild_handler(int sig) {
 }
 
 void sigint_sigtstp_handler(int sig) {
-    if (gpid != -1) {
-        kill(-gpid, sig);
-        gpid = -1;
-    } else {
-        write(STDOUT_FILENO, "\n", 1);
+    if (jobs == NULL || jobs->list == NULL) {
+        return;
     }
+
+    job_t *current = jobs->list;
+    while (current != NULL) {
+        if (current->num == current_job) {
+            break;
+        }
+        current = current->next;
+    }    
+    kill(-current->gpid, sig);
 }
 
 

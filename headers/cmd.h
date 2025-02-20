@@ -4,6 +4,7 @@
 #include "csapp.h"
 #include "readcmd.h"
 #include "handlers.h"
+#include "jobs.h"
 
 #define MAXPATH 100
 

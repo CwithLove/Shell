@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-extern gid_t gpid;
 
 static int nb_cmd(struct cmdline *l) {
     int i = 0;
@@ -52,15 +51,38 @@ static int cd(char **cmd) {
 
 int internal(char **cmd) {
     if (!strcmp(cmd[0], "exit") || !strcmp(cmd[0], "quit")) {
+        list_jobs_free(jobs);
         exit(0);
     } else if (!strcmp(cmd[0], "cd")) { 
         return cd(cmd);
     } else if (!strcmp(cmd[0], "jobs")) {
-        /* code */
-    } else if (!strcmp(cmd[0], "fg")) {
-        /* code */
-    } else if (!strcmp(cmd[0], "bg")) {
-        /* code */
+        list_jobs_print(jobs);
+    } else if (!strcmp(cmd[0], "fg") || !strcmp(cmd[0], "bg") || !strcmp(cmd[0], "stop")) {
+        int num; 
+
+        if (cmd[1] == NULL) {
+            num = jobs->count;
+        } else {
+            if (cmd[1][0] == '%') {
+                num = atoi(cmd[1] + 1);
+            } else {
+                num = atoi(cmd[1]);
+            }
+        }
+
+        switch (cmd[0][0])
+        {
+        case 'f':
+            fg_job(num);
+            break;
+        
+        case 'b':
+            bg_job(num);
+            break;
+        case 's':
+            stop_job(num);
+            break;
+        }
     }
     
     return 0;
@@ -166,10 +188,12 @@ void execution(struct cmdline *l) {
     }
 
     int n_cmd = nb_cmd(l);
+    linked_list_t *pids = linked_list_init();
     int **pipes;
     int nb_child = 0;
     pid_t pid;
-    gpid = -1;
+    int n_internal = 0;
+    gid_t gpid = -1;
 
     if (n_cmd > 0) {
         pipes = create_pipes(n_cmd);
@@ -183,21 +207,25 @@ void execution(struct cmdline *l) {
 
     for (int cmd = 0; cmd < n_cmd; cmd++) {
         if (internal(l->seq[cmd])) {
+            n_internal++;
             continue;
         } 
     
         pid = fork();
         if (pid == -1) {
             perror("Fork");
+
         } else if (pid > 0) {
             // Pere
             child_pids[nb_child++] = pid;
             if (gpid == -1) {
                 gpid = pid;
-                
             }
             setpgid(pid, gpid);
+
+            linked_list_add(pids, pid);
         } else {
+
             // Fils
             connect_in_out(l,cmd,n_cmd);
             connect_pipes(pipes, cmd,n_cmd);
@@ -211,9 +239,20 @@ void execution(struct cmdline *l) {
             }
         }
     }
+    
+    if (n_cmd == n_internal) {
+        return;
+    }
 
+    int job = jobs_add(pids, gpid, l->seq);
+    
     connect_pipes(pipes, -1, n_cmd);
     free_pipes(pipes, n_cmd);
-    wait_fg_process(l, nb_child, child_pids);
+
+    if (!l->bg) {
+        current_job = job;
+    }
+
+    wait_current_job();
 }
 

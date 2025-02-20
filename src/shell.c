@@ -8,14 +8,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "handlers.h"
+#include "jobs.h"
+#include "global"
 
-extern int refresh_prompt;
 
 int main()
 {
 	Signal(SIGCHLD, sigchild_handler);
 	Signal(SIGINT, sigint_sigtstp_handler);
 	Signal(SIGTSTP, sigint_sigtstp_handler);
+	jobs = jobs_init();
 	while (1) {
 		
 		char *username = "Vania@Marangozova";

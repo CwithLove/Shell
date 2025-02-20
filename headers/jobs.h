@@ -38,9 +38,9 @@ typedef struct job
     gid_t gpid;
 
     /**
-     * @brief State of the job (RUNNING, STOPPED, TERMINATED)
+     * @brief Status of the job (RUNNING, STOPPED, TERMINATED)
      */
-    ProcessState state;
+    ProcessState status;
 
     /**
      * @brief Command of the job
@@ -65,9 +65,6 @@ typedef struct jobs
      */
     job_t* list;
 } jobs_t;
-
-jobs_t* jobs = NULL;
-int current_job = -1;
 
 /**
  * @brief Initialize the jobs structure
@@ -95,7 +92,7 @@ char *get_cmd(char ***seq);
  * @param gpid The process group identifier
  * @param cmd The command
  */
-int jobs_add(linked_list *pid, gid_t gpid, char* cmd);
+int jobs_add(linked_list_t *pid, gid_t gpid, char* cmd);
 
 /**
  * @brief print all jobs
@@ -157,5 +154,14 @@ void stop_job(int num);
  * 
  */
 void wait_current_job();
+
+/**
+ * @brief Terminate jobs in status TERMINATED
+ * 
+ * This function terminates a job.
+ * 
+ * @param num 
+ */
+void terminate_job();
 
 #endif
