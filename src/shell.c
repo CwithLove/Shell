@@ -9,15 +9,15 @@
 #include <stdlib.h>
 #include "handlers.h"
 #include "jobs.h"
-#include "global"
 
+extern jobs_t *jobs;
 
 int main()
 {
+	jobs = jobs_init();
 	Signal(SIGCHLD, sigchild_handler);
 	Signal(SIGINT, sigint_sigtstp_handler);
 	Signal(SIGTSTP, sigint_sigtstp_handler);
-	jobs = jobs_init();
 	while (1) {
 		
 		char *username = "Vania@Marangozova";
@@ -31,7 +31,6 @@ int main()
 			printf( "\033[0;32m%s\033[0m:[\033[0;34m%s\033[0m]: ", username, cwd);
 		}
 		fflush(stdout);
-		// int i, j;
 	
 		struct cmdline *l;
 		l = readcmd();
@@ -51,17 +50,7 @@ int main()
 		if (l->in) printf("in: %s\n", l->in);
 		if (l->out) printf("out: %s\n", l->out);
 
-		/* Display each command of the pipe */
-		// for (i=0; l->seq[i]!=0; i++) {
-		// 	char **cmd = l->seq[i];
-		// 	printf("seq[%d]: ", i);
-		// 	for (j=0; cmd[j]!=0; j++) {
-		// 		printf("%s ", cmd[j]);
-		// 	}
-		// 	printf("\n");
-		// }
-
-		// fprintf(stderr, "Execution cmd...\n");
 		execution(l);
+		wait_current_job();
 	}
 }

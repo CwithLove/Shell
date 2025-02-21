@@ -2,7 +2,10 @@
 #define HANDLERS_H
 
 #include "csapp.h"
-
+#include "jobs.h"
+#include "linked_list.h"
+#include <signal.h>
+#include <sys/wait.h>
 /**
  * @brief Signal handler for SIGCHLD
  * 

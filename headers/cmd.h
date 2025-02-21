@@ -3,7 +3,10 @@
 
 #include "csapp.h"
 #include "readcmd.h"
-#include "handlers.h"
+#include <grp.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
 #include "jobs.h"
 
 #define MAXPATH 100

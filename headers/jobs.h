@@ -92,7 +92,7 @@ char *get_cmd(char ***seq);
  * @param gpid The process group identifier
  * @param cmd The command
  */
-int jobs_add(linked_list_t *pid, gid_t gpid, char* cmd);
+int jobs_add(linked_list_t *pid, gid_t gpid, char*** cmd);
 
 /**
  * @brief print all jobs
