@@ -245,14 +245,12 @@ void wait_current_job() {
         sleep(1);
     }
     
-    // Job đã TERMINATED: Loại bỏ job khỏi danh sách và giải phóng
     if (prev == NULL) {
-        // Nếu job cần xoá nằm đầu danh sách
         jobs->list = current->next;
     } else {
         prev->next = current->next;
     }
-    jobs->count--;  // Giảm số lượng job
+    jobs->count--;
     job_free(current);
 
     current_job = -1;

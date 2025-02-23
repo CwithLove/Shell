@@ -24,7 +24,7 @@ int main() {
 	
 	while (1) {
 		terminate_job();
-		
+
 		// Change your username here
 		char *username = "Vania@Marangozova";
 		char *home = getenv("HOME");
@@ -38,8 +38,6 @@ int main() {
 		}
 		fflush(stdout);
 	
-
-
 		l = readcmd();
 
 		/* If input stream closed, normal termination */
@@ -53,9 +51,6 @@ int main() {
 			printf("error: %s\n", l->err);
 			continue;
 		}
-
-		if (l->in) printf("in: %s\n", l->in);
-		if (l->out) printf("out: %s\n", l->out);
 
 		execution(l);
 		wait_current_job();

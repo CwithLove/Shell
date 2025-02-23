@@ -220,9 +220,7 @@ void execution(struct cmdline *l) {
             connect_in_out(l,cmd,n_cmd);
             connect_pipes(pipes, cmd,n_cmd);
             free_pipes(pipes, n_cmd);
-            if (!isatty(STDIN_FILENO)) {
-                fprintf(stderr, "Cảnh báo: STDIN không phải là terminal.\n");
-            }
+            
             if (execvp(l->seq[cmd][0], l->seq[cmd]) == -1) {
                 if (l->bg) {
                     l->bg = 0;
