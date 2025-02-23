@@ -65,6 +65,7 @@ int internal(char **cmd) {
         return cd(cmd);
     } else if (!strcmp(cmd[0], "jobs")) {
         list_jobs_print(jobs);
+        return 1;
     } else if (!strcmp(cmd[0], "fg") || !strcmp(cmd[0], "bg") || !strcmp(cmd[0], "stop")) {
         int num; 
 
@@ -181,16 +182,6 @@ void connect_in_out(struct cmdline* l, int rang_cmd, int n_cmd)
     }
 }
 
-void wait_fg_process(struct cmdline *l, int nb_child, pid_t *child_pids) {
-    if (!l->bg) {
-        for (int i = 0; i < nb_child; i++) {
-            if (waitpid(child_pids[i], NULL, 0) == -1) {
-                perror("waitpid");
-            }
-        }
-    }
-}
-
 void execution(struct cmdline *l) {
     if (l->seq[0] == NULL) {
         return;
@@ -200,7 +191,7 @@ void execution(struct cmdline *l) {
     linked_list_t *pids = linked_list_init();
     int **pipes;
     pid_t pid;
-    gid_t gpid = 0;
+    gid_t gpid = -1;
     
     if (n_cmd > 0) {
         pipes = create_pipes(n_cmd);
@@ -229,6 +220,9 @@ void execution(struct cmdline *l) {
             connect_in_out(l,cmd,n_cmd);
             connect_pipes(pipes, cmd,n_cmd);
             free_pipes(pipes, n_cmd);
+            if (!isatty(STDIN_FILENO)) {
+                fprintf(stderr, "Cảnh báo: STDIN không phải là terminal.\n");
+            }
             if (execvp(l->seq[cmd][0], l->seq[cmd]) == -1) {
                 if (l->bg) {
                     l->bg = 0;
@@ -239,9 +233,6 @@ void execution(struct cmdline *l) {
         }
     }
     
-    if (n_cmd == n_internal) {
-        return;
-    }
     connect_pipes(pipes, -1, n_cmd);
     free_pipes(pipes, n_cmd);
 
@@ -249,9 +240,13 @@ void execution(struct cmdline *l) {
         return;
     }
 
+    // create job
     int job_num = jobs_add(pids, gpid, l->seq);
     if (!l->bg) {
         current_job = job_num;
+    } else {
+        printf("[%d] %d\n", job_num, pids->head->pid);
     }
+    list_jobs_print();
 }
 

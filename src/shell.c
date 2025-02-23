@@ -19,7 +19,7 @@ int main()
 	Signal(SIGINT, sigint_sigtstp_handler);
 	Signal(SIGTSTP, sigint_sigtstp_handler);
 	while (1) {
-		
+		list_jobs_print();
 		char *username = "Vania@Marangozova";
 		char *home = getenv("HOME");
 		char cwd[MAXPATH]; 
@@ -32,6 +32,8 @@ int main()
 		}
 		fflush(stdout);
 	
+		terminate_job();
+
 		struct cmdline *l;
 		l = readcmd();
 

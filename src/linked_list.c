@@ -66,18 +66,3 @@ void linked_list_free(linked_list_t *list) {
     free(list);
 }
 
-pid_t get_last_pid(linked_list_t *list) {
-    node_t *current = list->head;
-    while (current->next != NULL) {
-        current = current->next;
-    }
-    return current->pid;
-}
-
-void send_signal_to_all(linked_list_t *list, int signal) {
-    node_t *current = list->head;
-    while (current != NULL) {
-        kill(current->pid, signal);
-        current = current->next;
-    }
-}

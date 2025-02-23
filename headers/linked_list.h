@@ -84,25 +84,4 @@ void linked_list_print(linked_list_t *list);
  */
 void linked_list_free(linked_list_t *list);
 
-/**
- *  @brief Get the pid of the last node in the linked list
- * 
- *  This function gets the pid of the last node in the linked list.
- * 
- *  @param list The linked list
- *  @return The pid of the last node in the linked list
- */
-pid_t get_last_pid(linked_list_t *list);
-
-/**
- *  @brief Send a signal to all nodes in the linked list
- * 
- *  This function sends a signal to all nodes in the linked list.
- * 
- *  @param list The linked list
- *  @param signal The signal to send
- */
-void send_signal_to_all(linked_list_t *list, int signal);
-
-
 #endif

@@ -1,7 +1,7 @@
 #include "jobs.h"
 
-jobs_t *jobs;
-int current_job;
+jobs_t *jobs = NULL;
+int current_job = -1;
 
 jobs_t *jobs_init() {
     jobs_t *j = malloc(sizeof(jobs_t));
@@ -15,13 +15,19 @@ jobs_t *jobs_init() {
 }
 
 char *get_cmd(char ***seq) {
-    int cmd_len = 0;
+    int total_len = 0;
+    char *cmd;
+
     for (int i = 0; seq[i] != NULL; i++) {
         for (int j = 0; seq[i][j] != NULL; j++) {
-            cmd_len += strlen(seq[i][j]) + 1;
+            total_len += strlen(seq[i][j]) + 1; // +1 for space or null terminator
+        }
+        if (seq[i + 1] != NULL) {
+            total_len += 3; // space + '|' + space
         }
     }
-    char *cmd = malloc(sizeof(char) * cmd_len);
+    
+    cmd = malloc(sizeof(char) * total_len);
     if (cmd == NULL) {
         perror("malloc");
         exit(EXIT_FAILURE);
@@ -48,12 +54,17 @@ char *get_cmd(char ***seq) {
         }
         i++;
     }
-    cmd[cmd_len - 1] = '\0';
+    cmd[total_len - 1] = '\0';
 
     return cmd;
 }
 
 int jobs_add(linked_list_t *pids, gid_t gpid, char ***seq) {
+    if (jobs->count >= MAXJOBS) {
+        fprintf(stderr, "Error: too many jobs\n");
+        return -1;
+    }
+
     job_t *job = (job_t *)malloc(sizeof(job_t));
     if (job == NULL) {
         perror("malloc");
@@ -95,7 +106,8 @@ void job_print(job_t *job) {
 }
 
 void list_jobs_print() {
-    if (!jobs) {
+    if (!jobs || jobs->count == 0 || jobs->list == NULL) {
+        fprintf(stderr, "No such jobs\n");
         return;
     }
     job_t *current = jobs->list;
@@ -129,49 +141,63 @@ void list_jobs_free() {
 }
 
 void fg_job(int num) {
-    // if (jobs == NULL) {
-    //     // fprintf(stderr, "no such jobs\n"); // A VERIFIER
-    //     perror("fg");
-    //     return;
-    // }
+    if (jobs == NULL || jobs->count == 0) {
+        fprintf(stderr, "fg: current: no such job\n");
+        return;
+    }
 
-    // job_t *current = jobs->list;
-    // while (current) {
-    //     if (current->num == num) {
-    //         break;
-    //     }
-    //     current = current->next;
-    // }
+    job_t *current = jobs->list;
+    while (current) {
+        if (current->num == num) {
+            break;
+        }
+        current = current->next;
+    }
 
-    // if (current == NULL) {
-    //     // fprintf(stderr, "no such jobs\n"); // A VERIFIER
-    //     perror("fg");
-    //     return;
-    // } else {
-    //     current_job = current->num;
-    //     kill(-jobs->list->gpid, SIGCONT);
-    // }
+    if (current == NULL) {
+        fprintf(stderr, "fg: %d: no such job\n", num);
+        return;
+    }
+
+    if (current->status == STOPPED) {
+        if (kill(-current->gpid, SIGCONT) == -1) {
+            perror("kill");
+        } else {
+            current->status = RUNNING;
+        }
+        current_job = current->num;
+    } else if (current->status == RUNNING) {
+        current_job = current->num;
+    }
+    wait_current_job();
 }
 
 void bg_job(int num) {
-    // if (jobs == NULL) {
-    //     perror("bg");
-    //     return;
-    // } 
+    if (jobs == NULL || jobs->count == 0) {
+        fprintf(stderr, "bg: current: no such job\n");
+        return;
+    }
 
-    // job_t *current = jobs->list;
-    // while (current) {
-    //     if (current->num == num) {
-    //         break;
-    //     }
-    //     current = current->next;
-    // }
-    
-    // if (current == NULL) {
-    //     perror("bg");
-    //     return;
-    // }
-    // kill(-jobs->list->gpid, SIGCONT);
+    job_t *current = jobs->list;
+    while (current) {
+        if (current->num == num) {
+            break;
+        }
+        current = current->next;
+    }
+
+    if (current == NULL) {
+        fprintf(stderr, "bg: %d: no such job\n", num);
+        return;
+    }
+
+    if (current->status == STOPPED) {
+        if (kill(-current->gpid, SIGCONT) == -1) {
+            perror("kill");
+        } else {
+            current->status = RUNNING;
+        }
+    }
 }
 
 void stop_job(int num) {    
@@ -192,56 +218,56 @@ void stop_job(int num) {
 }
 
 void wait_current_job() {
-    job_t *prec;
-    job_t *current;
-    if (current_job != -1) {
-        prec = NULL;
-        current = jobs->list;
-        while (current) {
-            if (current->num == current_job) {
-                break;
-            }
-            prec = current;
-            current = current->next;
-        }    
+    job_t *prev = NULL;
+    job_t *current = jobs->list;
+
+
+    // Find the job in the list
+    while (current != NULL && current->num != current_job) {
+        prev = current;
+        current = current->next;
     }
 
-    while (current_job != -1 && (current->status != TERMINATED)) {
+    // if the job is not found
+    if (current == NULL) {
+        current_job = -1;
+        return;
+    }
+
+    // wait until the job is terminated
+    while (current_job != -1 && current->status != TERMINATED) {
         sleep(1);
     }
 
-    if (current_job != -1) {
-        if (prec == NULL) {
-            jobs->list = current->next;
-        } else {
-            prec->next = current->next;
-        }
-        job_free(current);
+    // After the job is terminated, we free the job
+    if (prev == NULL) {
+        jobs->list = current->next;
+    } else {
+        prev->next = current->next;
     }
+    jobs->count--;  // Reducing the number of jobs
+
+    job_free(current);
 
     current_job = -1;
 }
+
 
 void terminate_job() {
     if (jobs == NULL) {
         return;
     }
-
-    job_t *prec = NULL;
-    job_t *current = jobs->list;
-    if (current == NULL) {
-        return;
-    } else {
-        while (current) {
-            if (current->status == TERMINATED) {
-                if (prec == NULL) {
-                    jobs->list = current->next;
-                } else {
-                    prec->next = current->next;
-                }
-                job_free(current);
-            }
-            current = current->next;
+    
+    job_t **pp = &jobs->list;
+    while (*pp != NULL) {
+        job_t *current = *pp;
+        if (current->status == TERMINATED) {
+            job_print(current);
+            *pp = current->next;
+            job_free(current);
+            jobs->count--;
+        } else {
+            pp = &((*pp)->next);
         }
     }
 }
