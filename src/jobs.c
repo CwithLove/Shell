@@ -218,11 +218,12 @@ void stop_job(int num) {
 }
 
 void wait_current_job() {
+    job_t *prev = NULL;
     job_t *current = jobs->list;
-
 
     // Find the job in the list
     while (current != NULL && current->num != current_job) {
+        prev = current;
         current = current->next;
     }
 
@@ -243,6 +244,16 @@ void wait_current_job() {
         }
         sleep(1);
     }
+    
+    // Job đã TERMINATED: Loại bỏ job khỏi danh sách và giải phóng
+    if (prev == NULL) {
+        // Nếu job cần xoá nằm đầu danh sách
+        jobs->list = current->next;
+    } else {
+        prev->next = current->next;
+    }
+    jobs->count--;  // Giảm số lượng job
+    job_free(current);
 
     current_job = -1;
 }
@@ -256,7 +267,6 @@ void terminate_job() {
     while (*pp != NULL) {
         job_t *current = *pp;
         if (current->status == TERMINATED) {
-            fprintf(stderr,"Job %d terminated", current->num);
             job_print(current);
             *pp = current->next;
             job_free(current);
@@ -265,4 +275,4 @@ void terminate_job() {
             pp = &((*pp)->next);
         }
     }
-}
+}   
