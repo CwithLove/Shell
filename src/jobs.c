@@ -61,11 +61,6 @@ char *get_cmd(char ***seq) {
 }
 
 int jobs_add(linked_list_t *pids, gid_t gpid, char ***seq) {
-    if (jobs->count >= MAXJOBS) {
-        fprintf(stderr, "Error: too many jobs\n");
-        exit(EXIT_FAILURE);
-    }
-
     job_t *job = (job_t *)malloc(sizeof(job_t));
     if (job == NULL) {
         perror("malloc");
@@ -75,9 +70,7 @@ int jobs_add(linked_list_t *pids, gid_t gpid, char ***seq) {
     job->gpid = gpid;
     job->status = RUNNING;
     job->cmd = get_cmd(seq);
-    /* A COMPLETER 
-    CONDITION LE JOB > 10
-    */
+
     if (jobs->count != 0) {
         job->num = jobs->list->num + 1;
     } else {

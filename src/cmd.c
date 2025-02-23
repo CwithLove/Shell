@@ -48,6 +48,41 @@ int cd(char **cmd) {
     return 1;
 }
 
+int export(char **cmd) {
+    if (cmd[1] == NULL) {
+        fprintf(stderr, "Error: export VAR=value\n");
+        return 1;
+    }
+
+    char *arg = cmd[1];
+    char *eq_ptr = strchr(arg, '=');
+
+    if (eq_ptr == NULL) {
+        char *current_val = getenv(arg);
+        if (current_val == NULL) {
+            if (setenv(arg, "", 1) < 0) {
+                perror("setenv");
+                return 1;
+            }
+        } else {
+            if (setenv(arg, current_val, 1) < 0) {
+                perror("setenv");
+                return 1;
+            }
+        }
+    } else {
+        *eq_ptr = '\0';    
+        char *var_name = arg;
+        char *var_value = eq_ptr + 1;
+        if (setenv(var_name, var_value, 1) < 0) {
+            perror("setenv");
+            return 1;
+        }
+    }
+
+    return 1;
+}
+
 int internal(char **cmd) {
     if (cmd[0][0] == '#') {
         return 1;
@@ -63,6 +98,8 @@ int internal(char **cmd) {
         exit(status);
     } else if (!strcmp(cmd[0], "cd")) { 
         return cd(cmd);
+    } else if (!strcmp(cmd[0], "export")) {
+        return export(cmd);
     } else if (!strcmp(cmd[0], "jobs")) {
         list_jobs_print(jobs);
         return 1;
@@ -182,6 +219,29 @@ void connect_in_out(struct cmdline* l, int rang_cmd, int n_cmd)
     }
 }
 
+char *get_each_cmd(char **seq) {
+    char *cmd;
+    int total_len = 0;
+    int i = 0;
+    while (seq[i] != NULL) {
+        total_len += strlen(seq[i]) + 1;
+        i++;
+    }
+    cmd = malloc(sizeof(char) * total_len);
+    if (cmd == NULL) {
+        perror("malloc");
+        exit(EXIT_FAILURE);
+    }
+    cmd[0] = '\0';
+    for (int j = 0; seq[j] != NULL; j++) {
+        strcat(cmd, seq[j]);
+        if (seq[j + 1] != NULL) {
+            strcat(cmd, " ");
+        }
+    }
+    return cmd;
+}
+
 void execution(struct cmdline *l) {
     if (l->seq[0] == NULL) {
         return;
@@ -204,6 +264,22 @@ void execution(struct cmdline *l) {
             continue;
         } 
     
+        if (jobs->count >= MAXJOBS) {
+            fprintf(stderr, "Error: No more jobs\n");
+            errno = EAGAIN;
+            return;
+        }
+
+        char *cmd_str = get_each_cmd(l->seq[cmd]);
+        wordexp_t p;
+        int ret;
+
+        ret = wordexp(cmd_str, &p, 0);
+        if (ret != 0) {
+            perror("wordexp");
+            return;
+        }
+
         pid = fork();
         if (pid == -1) {
             perror("Fork");
@@ -221,7 +297,7 @@ void execution(struct cmdline *l) {
             connect_pipes(pipes, cmd,n_cmd);
             free_pipes(pipes, n_cmd);
             
-            if (execvp(l->seq[cmd][0], l->seq[cmd]) == -1) {
+            if (execvp(p.we_wordv[0], p.we_wordv) == -1) {
                 if (l->bg) {
                     l->bg = 0;
                 }
@@ -229,6 +305,7 @@ void execution(struct cmdline *l) {
                 exit(3);
             }
         }
+        wordfree(&p);
     }
     
     connect_pipes(pipes, -1, n_cmd);

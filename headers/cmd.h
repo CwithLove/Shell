@@ -9,6 +9,7 @@
 #include <sys/types.h>
 #include "linked_list.h"
 #include "jobs.h"
+#include <wordexp.h>
 
 /**
  * @def MAXPATH 
