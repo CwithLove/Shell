@@ -78,6 +78,8 @@ jobs_t* jobs_init();
 /**
  * @brief Get the cmd object
  * 
+ * This function gets the command from the sequence.
+ * 
  * @param seq 
  * @return char* 
  */
@@ -97,12 +99,16 @@ int jobs_add(linked_list_t *pid, gid_t gpid, char*** cmd);
 /**
  * @brief print all jobs
  * 
+ * This function prints a job's content.
+ * 
  * @param job 
  */
 void job_print(job_t* job);
 
 /**
  * @brief print all jobs
+ * 
+ * This function prints all jobs.
  * 
  * @param jobs 
  */
@@ -125,9 +131,9 @@ void list_jobs_free();
 /**
  * @brief Get a job by its number
  * 
- * @param jobs The jobs structure
+ * This function sends SIGCONT to a job and make the shell in waiting.
+ * 
  * @param num The number of the job
- * @return The job with the given number
  */
 void fg_job(int num);
 
@@ -135,6 +141,8 @@ void fg_job(int num);
  * @brief Start a job to the background
  * 
  * This function starts a job to the background.
+ * 
+ * @param num The number of the job
  */
 void bg_job(int num);
 
@@ -150,17 +158,14 @@ void stop_job(int num);
 /**
  * @brief Wait for the current job
  * 
- * This function waits for the current job.
- * 
+ * This function make the shell waiting for the current job.
  */
 void wait_current_job();
 
 /**
  * @brief Terminate jobs in status TERMINATED
  * 
- * This function terminates a job.
- * 
- * @param num 
+ * This function terminates jobs in status TERMINATED.
  */
 void terminate_job();
 

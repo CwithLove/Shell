@@ -2,6 +2,7 @@
 
 jobs_t *jobs = NULL;
 int current_job = -1;
+int terminated_job = 0;
 
 jobs_t *jobs_init() {
     jobs_t *j = malloc(sizeof(jobs_t));
@@ -62,7 +63,7 @@ char *get_cmd(char ***seq) {
 int jobs_add(linked_list_t *pids, gid_t gpid, char ***seq) {
     if (jobs->count >= MAXJOBS) {
         fprintf(stderr, "Error: too many jobs\n");
-        return -1;
+        exit(EXIT_FAILURE);
     }
 
     job_t *job = (job_t *)malloc(sizeof(job_t));
@@ -77,7 +78,11 @@ int jobs_add(linked_list_t *pids, gid_t gpid, char ***seq) {
     /* A COMPLETER 
     CONDITION LE JOB > 10
     */
-    job->num = jobs->count + 1;
+    if (jobs->count != 0) {
+        job->num = jobs->list->num + 1;
+    } else {
+        job->num = jobs->count + 1;
+    }
     job->next = jobs->list;
 
     jobs->list = job;
@@ -107,11 +112,13 @@ void job_print(job_t *job) {
 
 void list_jobs_print() {
     if (!jobs || jobs->count == 0 || jobs->list == NULL) {
-        fprintf(stderr, "No such jobs\n");
         return;
     }
     job_t *current = jobs->list;
     while (current) {
+        if (current->status == TERMINATED) {
+            terminated_job = 1;
+        }
         job_print(current);
         current = current->next;
     }
@@ -141,11 +148,6 @@ void list_jobs_free() {
 }
 
 void fg_job(int num) {
-    if (jobs == NULL || jobs->count == 0) {
-        fprintf(stderr, "fg: current: no such job\n");
-        return;
-    }
-
     job_t *current = jobs->list;
     while (current) {
         if (current->num == num) {
@@ -155,7 +157,7 @@ void fg_job(int num) {
     }
 
     if (current == NULL) {
-        fprintf(stderr, "fg: %d: no such job\n", num);
+        fprintf(stderr, "fg: no such job\n");
         return;
     }
 
@@ -169,6 +171,7 @@ void fg_job(int num) {
     } else if (current->status == RUNNING) {
         current_job = current->num;
     }
+    fprintf(stdout, "%s\n", current->cmd);
     wait_current_job();
 }
 
@@ -195,8 +198,15 @@ void bg_job(int num) {
         if (kill(-current->gpid, SIGCONT) == -1) {
             perror("kill");
         } else {
+            fprintf(stdout, "[%d] %s\n", current->num, current->cmd);
             current->status = RUNNING;
         }
+    } else if (current->status == RUNNING) {
+        fprintf(stderr, "bg: job %d already in background\n", num);
+        return;
+    } else {
+        fprintf(stderr, "bg: job has terminated\n");
+        return;
     }
 }
 
@@ -245,19 +255,21 @@ void wait_current_job() {
         sleep(1);
     }
     
-    if (prev == NULL) {
-        jobs->list = current->next;
-    } else {
-        prev->next = current->next;
+    if (current->status == TERMINATED) {
+        if (prev == NULL) {
+            jobs->list = current->next;
+        } else {
+            prev->next = current->next;
+        }
+        jobs->count--;
+        job_free(current);
     }
-    jobs->count--;
-    job_free(current);
 
     current_job = -1;
 }
 
 void terminate_job() {
-    if (jobs == NULL) {
+    if (jobs == NULL || jobs->list == NULL) {
         return;
     }
     
@@ -265,7 +277,9 @@ void terminate_job() {
     while (*pp != NULL) {
         job_t *current = *pp;
         if (current->status == TERMINATED) {
-            job_print(current);
+            if (!terminated_job) {
+                job_print(current);
+            }
             *pp = current->next;
             job_free(current);
             jobs->count--;
@@ -273,4 +287,5 @@ void terminate_job() {
             pp = &((*pp)->next);
         }
     }
+    terminated_job = 0;
 }   

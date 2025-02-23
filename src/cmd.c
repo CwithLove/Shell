@@ -3,7 +3,7 @@
 extern jobs_t *jobs;
 extern int current_job;
 
-static int nb_cmd(struct cmdline *l) {
+int nb_cmd(struct cmdline *l) {
     int i = 0;
     while (l->seq[i] != NULL) {
         i++;
@@ -11,7 +11,7 @@ static int nb_cmd(struct cmdline *l) {
     return i;
 }
 
-static int cd(char **cmd) {
+int cd(char **cmd) {
     char *path = malloc(sizeof(char) * MAXPATH + 1);
     if (path == NULL) {
         perror("malloc");

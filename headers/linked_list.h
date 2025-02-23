@@ -71,7 +71,7 @@ int linked_list_is_empty(linked_list_t *list);
  * 
  * @param list 
  * @param pid 
- * @return int 
+ * @return  return 1 if the linked list contains the pid, 0 otherwise
  */
 int linked_list_contains(linked_list_t *list, pid_t pid);
 
