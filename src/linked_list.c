@@ -47,6 +47,17 @@ int linked_list_is_empty(linked_list_t *list) {
     return list->head == NULL;
 }
 
+int linked_list_contains(linked_list_t *list, pid_t pid) {
+    node_t *current = list->head;
+    while (current != NULL) {
+        if (current->pid == pid) {
+            return 1;
+        }
+        current = current->next;
+    }
+    return 0;
+}
+
 void linked_list_print(linked_list_t *list) {
     node_t *current = list->head;
     while (current != NULL) {

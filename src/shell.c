@@ -12,14 +12,20 @@
 
 extern jobs_t *jobs;
 
-int main()
-{
+int main() {
 	jobs = jobs_init();
+	
+	// Setup handlers
 	Signal(SIGCHLD, sigchild_handler);
 	Signal(SIGINT, sigint_sigtstp_handler);
 	Signal(SIGTSTP, sigint_sigtstp_handler);
+
+	struct cmdline *l;
+	
 	while (1) {
-		list_jobs_print();
+		terminate_job();
+		
+		// Change your username here
 		char *username = "Vania@Marangozova";
 		char *home = getenv("HOME");
 		char cwd[MAXPATH]; 
@@ -32,9 +38,8 @@ int main()
 		}
 		fflush(stdout);
 	
-		terminate_job();
 
-		struct cmdline *l;
+
 		l = readcmd();
 
 		/* If input stream closed, normal termination */

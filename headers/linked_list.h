@@ -67,6 +67,15 @@ void linked_list_remove(linked_list_t *list, pid_t pid);
 int linked_list_is_empty(linked_list_t *list);
 
 /**
+ * @brief Check if the linked list contains a pid
+ * 
+ * @param list 
+ * @param pid 
+ * @return int 
+ */
+int linked_list_contains(linked_list_t *list, pid_t pid);
+
+/**
  *  @brief Print the linked list
  * 
  *  This function prints the linked list.

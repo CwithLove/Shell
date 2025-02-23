@@ -218,13 +218,11 @@ void stop_job(int num) {
 }
 
 void wait_current_job() {
-    job_t *prev = NULL;
     job_t *current = jobs->list;
 
 
     // Find the job in the list
     while (current != NULL && current->num != current_job) {
-        prev = current;
         current = current->next;
     }
 
@@ -235,23 +233,19 @@ void wait_current_job() {
     }
 
     // wait until the job is terminated
-    while (current_job != -1 && current->status != TERMINATED) {
+    while (current_job != -1) {
+        if (current->status == TERMINATED) {
+            break;
+        }
+        if (current->status == STOPPED) {
+            current_job = -1;
+            return;
+        }
         sleep(1);
     }
 
-    // After the job is terminated, we free the job
-    if (prev == NULL) {
-        jobs->list = current->next;
-    } else {
-        prev->next = current->next;
-    }
-    jobs->count--;  // Reducing the number of jobs
-
-    job_free(current);
-
     current_job = -1;
 }
-
 
 void terminate_job() {
     if (jobs == NULL) {
@@ -262,6 +256,7 @@ void terminate_job() {
     while (*pp != NULL) {
         job_t *current = *pp;
         if (current->status == TERMINATED) {
+            fprintf(stderr,"Job %d terminated", current->num);
             job_print(current);
             *pp = current->next;
             job_free(current);

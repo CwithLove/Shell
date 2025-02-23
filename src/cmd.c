@@ -247,6 +247,4 @@ void execution(struct cmdline *l) {
     } else {
         printf("[%d] %d\n", job_num, pids->head->pid);
     }
-    list_jobs_print();
 }
-

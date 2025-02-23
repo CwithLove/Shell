@@ -5,46 +5,43 @@
 
 extern jobs_t *jobs;
 extern int current_job;
+
+
 void sigchild_handler(int sig) {
     pid_t pid;
     int status;
 
     while ((pid = waitpid(-1, &status, WNOHANG | WUNTRACED)) > 0) {
-        // job_t *prev = NULL;
-        job_t *current = jobs->list;
-
-        while (current != NULL) {
-            // Remove the finished process from job's process list
-            linked_list_remove(current->pids, pid);
-
-            if (WIFEXITED(status) || WIFSIGNALED(status)) { // Case 1: Process terminated normally or by a signal
-                if (linked_list_is_empty(current->pids)) {
-                    current->status = TERMINATED;
-                    break; // Exit loop as the job has been freed
+        if (WIFSTOPPED(status)) {
+            gid_t gid = getpgid(pid);
+            job_t *job = jobs->list;
+            while (job != NULL) {
+                if (job->gpid == gid) {
+                    if (job->status != STOPPED) {
+                        job->status = STOPPED;
+                    }
+                    job_print(job);
+                    current_job = -1; 
+                    break;
                 }
-            } else if (WIFSTOPPED(status)) { // Case 2: Process was stopped
-                // gid_t gid = getpgid(pid);
-                // job_t *job = jobs->list;
-
-                // while (job) {
-                //     if (job->gpid == gid) {
-                //         job->status = STOPPED;
-                //         printf("\n");
-                //         job_print(job);
-                //         current_job = -1; // Reset current foreground job
-                //     }
-                //     job = job->next;
-                // }
-                current->status = STOPPED;
-                job_print(current);
-                current_job = -1; // Reset current foreground job
-                return;
+                job = job->next;
             }
-            // prev = current;
-            current = current->next;
+        } else if (WIFEXITED(status) || WIFSIGNALED(status)) {
+            job_t *job = jobs->list;
+            while (job != NULL) {
+                if (linked_list_contains(job->pids, pid)) {
+                    linked_list_remove(job->pids, pid);
+                    if (linked_list_is_empty(job->pids)) {
+                        job->status = TERMINATED;
+                        if (current_job == job->num) {
+                            current_job = -1;
+                        }
+                        break;
+                    }
+                }
+                job = job->next;
+            }
         }
-
-        // fprintf(stderr, "Process %d terminated\n", pid);
     }
 }
 
