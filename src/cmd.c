@@ -50,7 +50,7 @@ int cd(char **cmd) {
 
 int export(char **cmd) {
     if (cmd[1] == NULL) {
-        fprintf(stderr, "Error: export VAR=value\n");
+        fprintf(stderr, "Erreur: export VAR=value\n");
         return 1;
     }
 
@@ -265,7 +265,7 @@ void execution(struct cmdline *l) {
         } 
     
         if (jobs->count >= MAXJOBS) {
-            fprintf(stderr, "Error: No more jobs\n");
+            fprintf(stderr, "Erreur : nombre maximal de jobs atteint\n");
             errno = EAGAIN;
             return;
         }

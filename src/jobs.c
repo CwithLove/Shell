@@ -91,13 +91,13 @@ void job_print(job_t *job) {
     switch (job->status)
     {
     case RUNNING:
-        printf("Running");
+        printf("En cours d'exécution");
         break;
     case STOPPED:
-        printf("Suspended");
+        printf("Stoppé");
         break;
     case TERMINATED:
-        printf("Done");
+        printf("Fini");
         break;
     }
     printf("    %s\n", job->cmd);
@@ -150,7 +150,7 @@ void fg_job(int num) {
     }
 
     if (current == NULL) {
-        fprintf(stderr, "fg: no such job\n");
+        fprintf(stderr, "fg: tâche inexistante\n");
         return;
     }
 
@@ -170,7 +170,7 @@ void fg_job(int num) {
 
 void bg_job(int num) {
     if (jobs == NULL || jobs->count == 0) {
-        fprintf(stderr, "bg: current: no such job\n");
+        fprintf(stderr, "bg: current: tâche inexistante\n");
         return;
     }
 
@@ -183,7 +183,7 @@ void bg_job(int num) {
     }
 
     if (current == NULL) {
-        fprintf(stderr, "bg: %d: no such job\n", num);
+        fprintf(stderr, "bg: %d: tâche inexistante\n", num);
         return;
     }
 
@@ -195,10 +195,10 @@ void bg_job(int num) {
             current->status = RUNNING;
         }
     } else if (current->status == RUNNING) {
-        fprintf(stderr, "bg: job %d already in background\n", num);
+        fprintf(stderr, "bg: la tâche %d est déjà en arrière plan\n", num);
         return;
     } else {
-        fprintf(stderr, "bg: job has terminated\n");
+        fprintf(stderr, "bg: la tâche est déjà terminée\n");
         return;
     }
 }
@@ -213,7 +213,7 @@ void stop_job(int num) {
     }
 
     if (num >= MAXJOBS || jobs <= 0 || current == NULL) {
-        fprintf(stderr, "Error: invalid job number\n");
+        fprintf(stderr, "Erreur: numéro de job invalide\n");
     } else if (current->status == RUNNING) {
         kill(-current->gpid, SIGTSTP);
         current->status = STOPPED;

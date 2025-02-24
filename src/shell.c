@@ -42,13 +42,13 @@ int main() {
 
 		/* If input stream closed, normal termination */
 		if (!l) {
-			printf("exit\n");
+			printf("bye bye\n");
 			exit(0);
 		}
 
 		if (l->err) {
 			/* Syntax error, read another command */
-			printf("error: %s\n", l->err);
+			printf("erreur: %s\n", l->err);
 			continue;
 		}
 
