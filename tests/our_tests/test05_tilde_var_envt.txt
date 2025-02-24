@@ -1,0 +1,4 @@
+ls ~/* $HOME
+export DAY=MONDAY
+echo Today is $DAY
+ls *

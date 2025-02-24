@@ -1,27 +1,24 @@
-#
-# test01.txt - Tester les commandes internes
-#
 export MAVAR="hello world!"
 echo 
-echo "Affichage sans dollar"
+echo Affichage sans dollar
 echo MAVAR
 echo Affichage avec dollar
 echo $MAVAR
 
 echo 
 echo
-echo "Testing cd"
-echo "Le pwd"
+echo Testing cd
+echo Le pwd
 pwd
 ls
-echo "Changer le repertoire courant a headers"
+echo Changer le repertoire courant a headers
 cd headers
-echo "Files and folders:"
+echo Files and folders:
 ls
 echo
-echo "Le chemin pwd maintenant"
+echo Le chemin pwd maintenant
 pwd
-echo "Reviens vers repertoire Shell"
+echo Reviens vers repertoire Shell
 cd ../
 pwd
 exit

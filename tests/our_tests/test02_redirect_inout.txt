@@ -1,16 +1,11 @@
-#
-# test02_redirect_inout.txt - Tester la rediection entree/sortie
-#
 echo Tester la rediection entree
-echo INPUT FILE:
-cat input.txt
-sort < input.txt
-wc < input.txt
+sort < Makefile
+wc < Makefile
 echo Tester la redirecttion sortie
-wc < input.txt > output.txt
+wc < Makefile > output.txt
 echo output:
 cat output.txt
-sort < input.txt > output.txt
+sort < README.md > output.txt
 cat output.txt
 ls > output.txt
 more output.txt

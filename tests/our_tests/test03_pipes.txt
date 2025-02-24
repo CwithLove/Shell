@@ -1,0 +1,6 @@
+mkdir -p __tests
+ls | cat | cat | cat | cat
+ls | grep Makefile
+sleep .1 | cat README.md
+echo "Hello, World!" | tr '[:lower:]' '[:upper:]' | cat > output.txt
+rmdir __tests

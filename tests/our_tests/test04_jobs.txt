@@ -1,0 +1,9 @@
+cat Makefile > /dev/null &
+ls &
+sleep .1 &
+fg %1
+ls & 
+bg %1
+cat README.md > /dev/null &
+exit
+echo "this should not be printed"
