@@ -10,9 +10,10 @@
 #include "handlers.h"
 #include "jobs.h"
 
-extern jobs_t *jobs;
+extern jobs_t *jobs; // Référence globale à la structure de gestion des tâches.
 
 int main() {
+	// Initialisation de la structure globale de gestion des tâches.
 	jobs = jobs_init();
 	
 	// Setup handlers
@@ -23,9 +24,10 @@ int main() {
 	struct cmdline *l;
 	
 	while (1) {
+		// Libération des tâches terminées avant chaque nouvelle commande.
 		terminate_job();
 
-		// Change your username here
+		// Vous pouvez changer le nom d'utilisateur ici pour correspondre à votre profil.
 		char *username = "Vania@Marangozova";
 		char *home = getenv("HOME");
 		char cwd[MAXPATH]; 
@@ -53,6 +55,7 @@ int main() {
 		}
 
 		execution(l);
+		// Attente de la fin d'exécution de la tâche en avant-plan avant de reprendre l'invite.
 		wait_current_job();
 	}
 }
