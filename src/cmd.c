@@ -88,7 +88,7 @@ int internal(char **cmd) {
         return 1;
     }
     if (!strcmp(cmd[0], "exit") || !strcmp(cmd[0], "quit")) {
-        // list_jobs_free(jobs);
+        list_jobs_free(jobs);
         int status;
         if (cmd[1] != NULL) {
             status = atoi(cmd[1]);

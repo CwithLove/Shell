@@ -1,0 +1,16 @@
+#
+# test02_redirect_inout.txt - Tester la rediection entree/sortie
+#
+echo Tester la rediection entree
+echo INPUT FILE:
+cat input.txt
+sort < input.txt
+wc < input.txt
+echo Tester la redirecttion sortie
+wc < input.txt > output.txt
+echo output:
+cat output.txt
+sort < input.txt > output.txt
+cat output.txt
+ls > output.txt
+more output.txt
