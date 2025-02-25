@@ -7,9 +7,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
-#include "linked_list.h"
 #include "jobs.h"
 #include <wordexp.h>
+#include "linked_list.h"
 
 /**
  * @def MAXPATH 

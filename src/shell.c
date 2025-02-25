@@ -8,13 +8,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "handlers.h"
+#include "linked_list.h"
 #include "jobs.h"
 
 extern jobs_t *jobs; // Référence globale à la structure de gestion des tâches.
+extern linked_list_t *history; // Liste chaînée pour stocker l'historique des commandes.
 
 int main() {
 	// Initialisation de la structure globale de gestion des tâches.
 	jobs = jobs_init();
+	history = linked_list_init();
 	
 	// Setup handlers
 	Signal(SIGCHLD, sigchild_handler);

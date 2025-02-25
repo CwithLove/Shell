@@ -2,6 +2,7 @@
 
 extern jobs_t *jobs;    // Référence globale à la structure de gestion des tâches.
 extern int current_job; // Identifiant de la tâche en premier-plan.
+linked_list_t *history; // Liste chaînée pour stocker l'historique des commandes.
 
 int nb_cmd(struct cmdline *l) {
     int i = 0;
@@ -101,6 +102,7 @@ int internal(char **cmd) {
     // Commande d'arrêt du shell
     if (!strcmp(cmd[0], "exit") || !strcmp(cmd[0], "quit")) {
         list_jobs_free(jobs); // Liberer pour eviter la fuite de memoire
+        linked_list_free(history); // Liberer pour eviter la fuite de memoire
         int status;
         if (cmd[1] != NULL) {
             status = atoi(cmd[1]);
@@ -122,6 +124,20 @@ int internal(char **cmd) {
         list_jobs_print(jobs);
         return 1;
     } 
+    // Affichage de l'historique des commandes.
+    else if (!strcmp(cmd[0], "history")) {
+        if (cmd[1] != NULL && !strcmp(cmd[1], "-c")) {
+            linked_list_free(history);
+            history = linked_list_init();
+            return 1;
+        } else if (cmd[1] != NULL) {
+            fprintf(stderr, "Erreur: Option -c implemented only\n");
+            return 1;
+        } else {
+            linked_list_history(history);
+            return 1;
+        }
+    }
     // Commandes de gestion des tâches (foreground, background, stop).
     else if (!strcmp(cmd[0], "fg") || !strcmp(cmd[0], "bg") || !strcmp(cmd[0], "stop")) {
         int num; 
@@ -283,6 +299,10 @@ void execution(struct cmdline *l) {
         return;
     }
 
+    // Ajout de la commande à l'historique.
+    char *history_cmd = get_cmd(l->seq);
+    linked_list_add_tail(history, history_cmd);
+    
     int n_cmd = nb_cmd(l); // Nombre total de commandes dans la séquence.
     linked_list_t *pids = linked_list_init(); // Initialisation de la liste des PID.
     int **pipes;
