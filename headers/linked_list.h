@@ -14,6 +14,7 @@
  *  It contains a pid_t value and a pointer to the next node.
  */
 typedef struct node {
+    char *cmd;
     pid_t pid;
     struct node *next;
 } node_t;
@@ -25,6 +26,7 @@ typedef struct node {
  */
 typedef struct linked_list {
     node_t *head;
+    node_t *tail;
 } linked_list_t;
 
 /**
@@ -45,6 +47,26 @@ linked_list_t *linked_list_init();
  *  @param pid The pid to add
  */
 void linked_list_add(linked_list_t *list, pid_t pid);
+
+/**
+ * @brief Add a node to the tail of the linked list
+ * 
+ * This function adds a node to the tail of the linked list.
+ * 
+ * @param list
+ * @param cmd
+ */
+void linked_list_add_tail(linked_list_t *list, char* cmd);
+
+
+/**
+ * @brief Print the history of the linked list
+ * 
+ * This function prints the history.
+ * 
+ * @param list
+ */
+void linked_list_history(linked_list_t* list);
 
 /**
  *  @brief Remove a node from the linked list
